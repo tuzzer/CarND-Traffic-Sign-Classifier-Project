@@ -1,6 +1,10 @@
 # Load pickled data
 import pickle
 import os
+import sys
+from collections import defaultdict
+import numpy as np
+from skimage.util import random_noise
 
 data_folder = os.path.join(os.getcwd(), "traffic-signs-data")
 training_file = os.path.join(data_folder, "train.p")
@@ -14,7 +18,7 @@ with open(validation_file, mode='rb') as f:
 with open(testing_file, mode='rb') as f:
     test = pickle.load(f)
 
-X_train_raw, y_train = train['features'], train['labels']
+X_train_raw, y_train_raw = train['features'], train['labels']
 X_valid_raw, y_valid = valid['features'], valid['labels']
 X_test_raw, y_test = test['features'], test['labels']
 
@@ -22,7 +26,7 @@ X_test_raw, y_test = test['features'], test['labels']
 ### Use python, pandas or numpy methods rather than hard coding the results
 
 # Number of training examples
-n_train = len(y_train)
+n_train = len(y_train_raw)
 
 # Number of validation examples
 n_validation = len(y_valid)
@@ -34,7 +38,7 @@ n_test = len(y_test)
 image_shape = X_train_raw[0].shape
 
 # How many unique classes/labels there are in the dataset.
-n_classes = len(set(y_train))
+n_classes = len(set(y_train_raw))
 
 print("Number of training examples =", n_train)
 print("Number of testing examples =", n_test)
@@ -47,9 +51,9 @@ import matplotlib.pyplot as plt
 import csv
 
 # Visualizations will be shown in the notebook.
-y_train_by_class = [0]*n_classes
-for sample in y_train:
-    y_train_by_class[sample] += 1
+train_count_by_class = [0] * n_classes
+for sample in y_train_raw:
+    train_count_by_class[sample] += 1
 
 # Extract the label text
 class_labels_text = list(range(n_classes))
@@ -61,26 +65,61 @@ with open("signnames.csv", 'r') as csvfile:
         class_labels_text[int(row[0])] = str(row[1])
 
 # Sorting the from most to least
-y_train_by_class = list(zip(class_labels_text, y_train_by_class))
-sorted_y_train_by_class = sorted(y_train_by_class, key=lambda x: x[1], reverse=True)
-sorted_y_train_by_class = list(zip(*sorted_y_train_by_class))
+train_count_by_class = list(zip(class_labels_text, train_count_by_class))
+sorted_train_count_by_class = sorted(train_count_by_class, key=lambda x: x[1], reverse=True)
+sorted_train_count_by_class = list(zip(*sorted_train_count_by_class))
 
 # Plot the graph
 plt.figure(figsize=(15,4))
-plt.bar(range(len(sorted_y_train_by_class[1])), sorted_y_train_by_class[1], 0.5)
+plt.bar(range(len(sorted_train_count_by_class[1])), sorted_train_count_by_class[1], 0.5)
 plt.xlabel("Labels")
 plt.ylabel("Training Sample Counts")
 plt.title("Number of training samples by class")
-plt.xticks(range(len(sorted_y_train_by_class[0])), sorted_y_train_by_class[0], rotation="vertical")
+plt.xticks(range(len(sorted_train_count_by_class[0])), sorted_train_count_by_class[0], rotation="vertical")
 plt.show()
+
+
+# Put samples in a dictionary categorized by class
+X_train_by_class = defaultdict(list)
+for i in range(len(X_train_raw)):
+    X_train_by_class[y_train_raw[i]].append(X_train_raw[i])
+
+# Add noisy version of the sample until all classes have the sample number of samples
+max_sample_count = sorted_train_count_by_class[1][0]
+for class_id, class_samples in X_train_by_class.items():
+    num_samples = len(class_samples)
+    num_samples_still_needed = max_sample_count - num_samples
+    template_ids = np.random.choice(range(0, num_samples), num_samples_still_needed)
+    noisy_images = []
+    for template_id in template_ids:
+        noisy_image = random_noise(class_samples[template_id], mode="s&p")
+        # plt.figure(figsize=(4, 4))
+        # plt.imshow(noisy_image)
+        # plt.show()
+        noisy_images.append(noisy_image)
+
+    # add the noisy_image to the dict
+    class_samples += noisy_images
+    X_train_by_class[class_id] = class_samples
+
+# Turn the dict back to array again
+X_train_augmented = []
+y_train_augmented = []
+for class_id, class_samples in X_train_by_class.items():
+    X_train_augmented += class_samples
+    y_train_augmented += [class_id] * len(class_samples)
+
+n_train = len(X_train_augmented)
+print("Number of augmented training examples =", n_train)
 
 ### Preprocess the data here. It is required to normalize the data. Other preprocessing steps could include
 ### converting to grayscale, etc.
-import numpy as np
 
 # Greyscale the images
-X_train = np.mean(X_train_raw, axis=3)
+X_train = np.mean(X_train_augmented, axis=3)
 X_train = X_train.reshape(X_train.shape + (1,))
+y_train = y_train_augmented
+
 X_valid = np.mean(X_valid_raw, axis=3).squeeze()
 X_valid = X_valid.reshape(X_valid.shape + (1,))
 X_test = np.mean(X_test_raw, axis=3).squeeze()
@@ -95,8 +134,8 @@ X_train, y_train = shuffle(X_train, y_train)
 ### Define your architecture here.
 import tensorflow as tf
 
-EPOCHS = 20
-BATCH_SIZE = 512
+EPOCHS = 150
+BATCH_SIZE = 128
 
 from tensorflow.contrib.layers import flatten
 
@@ -107,8 +146,8 @@ def LeNet(x):
     sigma = 0.1
 
     # SOLUTION: Layer 1: Convolutional. Input = 32x32x1. Output = 28x28x6.
-    conv1_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 1, 6), mean=mu, stddev=sigma))
-    conv1_b = tf.Variable(tf.zeros(6))
+    conv1_W = tf.Variable(tf.truncated_normal(shape=(3, 3, 1, 64), mean=mu, stddev=sigma))
+    conv1_b = tf.Variable(tf.zeros(64))
     conv1 = tf.nn.conv2d(x, conv1_W, strides=[1, 1, 1, 1], padding='VALID') + conv1_b
 
     # SOLUTION: Activation.
@@ -118,7 +157,7 @@ def LeNet(x):
     conv1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='VALID')
 
     # SOLUTION: Layer 2: Convolutional. Output = 10x10x16.
-    conv2_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 6, 16), mean=mu, stddev=sigma))
+    conv2_W = tf.Variable(tf.truncated_normal(shape=(5, 5, 64, 16), mean=mu, stddev=sigma))
     conv2_b = tf.Variable(tf.zeros(16))
     conv2 = tf.nn.conv2d(conv1, conv2_W, strides=[1, 1, 1, 1], padding='VALID') + conv2_b
 
@@ -147,10 +186,12 @@ def LeNet(x):
     # SOLUTION: Activation.
     fc2 = tf.nn.relu(fc2)
 
+    h_fc1_drop = tf.nn.dropout(fc2, keep_prob)
+
     # SOLUTION: Layer 5: Fully Connected. Input = 84. Output = 43.
     fc3_W = tf.Variable(tf.truncated_normal(shape=(84, n_classes), mean=mu, stddev=sigma))
     fc3_b = tf.Variable(tf.zeros(n_classes))
-    logits = tf.matmul(fc2, fc3_W) + fc3_b
+    logits = tf.matmul(h_fc1_drop, fc3_W) + fc3_b
 
     return logits
 
@@ -163,9 +204,11 @@ def LeNet(x):
 
 x = tf.placeholder(tf.float32, (None,) + image_shape)
 y = tf.placeholder(tf.int32, (None))
+keep_prob = tf.placeholder(tf.float32)
+
 one_hot_y = tf.one_hot(y, n_classes)
 
-rate = 0.001
+rate = 0.0005
 
 logits = LeNet(x)
 cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=one_hot_y, logits=logits)
@@ -178,13 +221,13 @@ accuracy_operation = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 saver = tf.train.Saver()
 
 
-def evaluate(X_data, y_data):
+def evaluate(X_data, y_data, keep_prob_in=1.0):
     num_examples = len(X_data)
     total_accuracy = 0
     sess = tf.get_default_session()
     for offset in range(0, num_examples, BATCH_SIZE):
         batch_x, batch_y = X_data[offset:offset + BATCH_SIZE], y_data[offset:offset + BATCH_SIZE]
-        accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y})
+        accuracy = sess.run(accuracy_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: keep_prob_in})
         total_accuracy += (accuracy * len(batch_x))
     return total_accuracy / num_examples
 
@@ -197,11 +240,11 @@ with tf.Session(config=config) as sess:
     print("Training...")
     print()
     for i in range(EPOCHS):
-
+        X_train, y_train = shuffle(X_train, y_train)
         for offset in range(0, num_examples, BATCH_SIZE):
             end = offset + BATCH_SIZE
             batch_x, batch_y = X_train[offset:end], y_train[offset:end]
-            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y})
+            sess.run(training_operation, feed_dict={x: batch_x, y: batch_y, keep_prob: 0.5})
 
         validation_accuracy = evaluate(X_valid, y_valid)
         print("EPOCH {} ...".format(i + 1))
@@ -214,7 +257,7 @@ with tf.Session(config=config) as sess:
 
 def predict(X_data):
     sess = tf.get_default_session()
-    predictions = sess.run(logits, feed_dict={x: X_data})
+    predictions = sess.run(logits, feed_dict={x: X_data, keep_prob:1.0})
     return np.argmax(predictions, axis=1)
 
 random_image_ids = np.random.choice(n_test, 2)
@@ -222,11 +265,12 @@ random_image_ids = np.random.choice(n_test, 2)
 with tf.Session(config=config) as sess:
     saver.restore(sess, tf.train.latest_checkpoint('.'))
 
-    predictions = predict(X_test_raw[random_image_ids])
+    predictions = predict(X_test[random_image_ids])
     for i in range(len(random_image_ids)):
-        x_sample = X_test_raw[random_image_ids[i]]
+        x_sample = X_test[random_image_ids[i]]
         plt.figure(figsize=(4, 4))
-        plt.imshow(x_sample)
+        # plt.imshow(x_sample.reshape(x_sample.shape[:-1]), cmap="gray")
+        plt.imshow(X_test_raw[random_image_ids[i]])
         plt.show()
         print("Prediction = %s" % class_labels_text[predictions[i]])
 
