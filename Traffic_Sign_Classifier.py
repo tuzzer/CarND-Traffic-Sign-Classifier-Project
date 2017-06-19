@@ -306,6 +306,11 @@ from skimage import io, transform
 new_X_test_raw = []
 new_X_test_name = []
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
 data_folder = os.path.join(os.getcwd(), "traffic-signs-new-images")
 for new_sample_image_file in os.listdir(data_folder):
     if new_sample_image_file.endswith(".jpg"):
@@ -324,7 +329,8 @@ with tf.Session(config=config) as sess:
     new_X_test = np.mean(new_X_test_raw, axis=3).squeeze()
     new_X_test = new_X_test.reshape(new_X_test.shape + (1,))
 
-    predictions_probs = predict(new_X_test, return_prob=True)
+    predictions_probs_raw = predict(new_X_test, return_prob=True)
+    predictions_probs = softmax(predictions_probs_raw)
     predictions = np.argmax(predictions_probs, axis=1)
 
     for i in range(len(predictions)):

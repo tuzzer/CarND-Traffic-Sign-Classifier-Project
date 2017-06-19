@@ -13,7 +13,7 @@
 [new_image_2]: ./write-up_images/new_image_2.png "new_image_2"
 [new_image_3]: ./write-up_images/new_image_3.png "new_image_3"
 [new_image_4]: ./write-up_images/new_image_4.png "new_image_4"
-[new_image_5]: ./write-up_images/write-up_images/new_image_5.png "new_image_5"
+[new_image_5]: ./write-up_images/new_image_5.png "new_image_5"
 [new_image_6]: ./write-up_images/new_image_6.png "new_image_6"
 [new_image_1_train]: ./write-up_images/new_image_1_train.png "new_image_1_train"
 [new_image_2_train]: ./write-up_images/new_image_2_train.png "new_image_2_train"
@@ -145,23 +145,26 @@ Here are the results of the prediction:
 
 | Image			        |     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
-| Bicycle Crossing		| Ahead only    								| 
+| Bicycle Crossing		| Roadwork   					    			| 
 | Wild animals crossing | Wild animals crossing 						|
 | Go straight or right 	| Go straight or right          				|
-| Pedestrians      		| Pedestrians					 				|
+| Pedestrians      		| Right-of-way at the next intersection			|
 | Road work 			| Road work           							|
 | Stop         			| Stop                 							|
 
 
-Out of the 6 new images that I found on the web, I got 5 of them right. 
+Out of the 6 new images that I found on the web, I got 4 of them right. 
 
-This gives the model an accuracy of 0.83 for new images. This is low compared to the accuracy on the test set. 
+This gives the model an accuracy of 0.66 for new images. This is low compared to the accuracy on the test set. 
 
 
 ####3. Prediction Confidence
 
-The one that my model got wrong is "Bicycle Crossing". The confidence on the incorrectly classified images are relatively low. 
-Samples in the test set might be relative similar which caused the overfitting.
+The ones that my model got wrong are "Pedestrian", and "Bicycle Crossing". The confidence on the incorrectly classified images are relatively low compared to the ones that were correct. This might be because the images in the test set are more similar to the training set. 
+
+For "Pedestrians", the second most probable prediction was correct. This might be attribute to the similarity between the "Right-of-way" and "Pedestrians" signs.
+
+The images below showed an example of the "Bicycle Crossing" class in our training set. Due to small size and fine details in the images, a 32x32 sample is very pixelated and it is even difficult for human being to tell what the signs are. This might have contributed to the incorrect predictions. 
 
 ######Bicycle Crossing in training sample
 
@@ -173,59 +176,61 @@ Due to small size and fine details in the images, a 32x32 sample is very pixelat
 This might have contributed to the incorrect predictions. 
 
 
+Below are the top five predictions for each of the images and their associated softmax probabilities.
+
 #####Bicycle Crossing		
         			
-Top 5 Predictions
-	 Ahead only -- 1.14582
-	 Bicycles crossing -- -0.354429
-	 Children crossing -- -4.57259
-	 Slippery road -- -6.26757
-	 Speed limit (60km/h) -- -6.53344
+    Top 5 Predictions
+        Road work -- 1.92624e-08
+        Slippery road -- 1.59267e-08
+        Bicycles crossing -- 7.75884e-09
+        Ahead only -- 4.04294e-13
+        Dangerous curve to the right -- 2.06181e-13
 
 #####Wild animals crossing 
 
-Top 5 Predictions
-	 Wild animals crossing -- 5.51297
-	 Slippery road -- -0.466942
-	 No passing for vehicles over 3.5 metric tons -- -9.11336
-	 Dangerous curve to the left -- -12.5807
-	 Road work -- -15.5678
- 
+    Top 5 Predictions
+        Wild animals crossing -- 0.095946
+        Slippery road -- 1.35823e-09
+        Dangerous curve to the left -- 8.174e-10
+        Bicycles crossing -- 4.1841e-12
+        General caution -- 7.35425e-15
+     
 
 #####Go straight or right 	
 
-Top 5 Predictions
-	 Go straight or right -- 17.6862
-	 Dangerous curve to the left -- -18.5981
-	 Road work -- -18.6661
-	 General caution -- -22.9936
-	 Bicycles crossing -- -23.2801
+    Top 5 Predictions
+        Go straight or right -- 0.900367
+        Speed limit (60km/h) -- 1.18693e-15
+        Ahead only -- 6.63823e-17
+        Keep right -- 3.24098e-18
+        Yield -- 6.54349e-19
 
  
 #####Pedestrians      		
 
-Top 5 Predictions
-	 Pedestrians -- 26.7529
-	 Right-of-way at the next intersection -- 15.7218
-	 General caution -- -8.36611
-	 Roundabout mandatory -- -21.1614
-	 Vehicles over 3.5 metric tons prohibited -- -25.2543
+    Top 5 Predictions
+	    Right-of-way at the next intersection -- 0.00333398
+        Pedestrians -- 0.000179032
+        General caution -- 0.000172521
+        Double curve -- 2.65362e-16
+        Speed limit (100km/h) -- 7.09493e-19
 	 
 #####Road work
 
-Top 5 Predictions 
-	 Road work -- 15.2368
-	 Dangerous curve to the right -- -8.52853
-	 Beware of ice/snow -- -19.1516
-	 No passing for vehicles over 3.5 metric tons -- -28.595
-	 Wild animals crossing -- -30.0119
+    Top 5 Predictions 
+        Road work -- 9.3428e-07
+        Speed limit (60km/h) -- 2.36687e-11
+        Slippery road -- 2.00948e-11
+        General caution -- 1.28413e-11
+        Keep right -- 9.78972e-12
 
 #####Stop
 
-Top 5 Predictions
-	 Stop -- 2.01156
-	 Speed limit (30km/h) -- -4.08149
-	 Speed limit (70km/h) -- -4.47525
-	 Turn right ahead -- -4.87525
-	 Roundabout mandatory -- -6.19679
-
+    Top 5 Predictions
+        Stop -- 1.76267e-08
+        Turn right ahead -- 9.30297e-10
+        Keep right -- 7.33288e-10
+        Speed limit (50km/h) -- 6.77346e-10
+        No entry -- 3.93038e-10
+	 
