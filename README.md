@@ -111,6 +111,26 @@ Prediction = General caution
 
 Prediction = Speed limit (50km/h)
 
+#### 4. Discussions
+##### What was the first architecture that was tried and why was it chosen?
+LeNet used in MNIST example was used. It was chosen because it was already implemented and the two problems are quite similar.
+
+##### What were some problems with the initial architecture?
+It didn't have a dropout layer which may lead to overfitting. 
+
+##### How was the architecture adjusted and why was it adjusted?
+A dropout layer was added for the reason mentioned above. 
+
+#### Which parameters were tuned? How were they adjusted and why?
+The initial architecture has too few neurons and was unable to capture the complexity of the data set effectively. 
+Additional neurons were added to the convolutional layer.
+Moreover, a larger number of epochs was used to train the network since there are more training data and the data is
+inherently more complex. 
+
+#### What are some of the important design choices and why were they chosen?
+Under-represented data was resampled to balance out the data set. 
+Additional noise was added to the images to reduce overfitting.
+
 
 ###Test a Model on New Images
 
