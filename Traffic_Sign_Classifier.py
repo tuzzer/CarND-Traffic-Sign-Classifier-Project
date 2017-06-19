@@ -52,6 +52,10 @@ train_count_by_class = [0] * n_classes
 for sample in y_train_raw:
     train_count_by_class[sample] += 1
 
+test_count_by_class = [0] * n_classes
+for sample in y_test:
+    test_count_by_class[sample] += 1
+
 # Extract the label text
 class_labels_text = list(range(n_classes))
 with open("signnames.csv", 'r') as csvfile:
@@ -298,7 +302,6 @@ with tf.Session(config=config) as sess:
 
 
 from skimage import io, transform
-import os
 
 new_X_test_raw = []
 new_X_test_name = []
@@ -307,7 +310,7 @@ data_folder = os.path.join(os.getcwd(), "traffic-signs-new-images")
 for new_sample_image_file in os.listdir(data_folder):
     if new_sample_image_file.endswith(".jpg"):
         new_sample_image = io.imread(os.path.join(data_folder, new_sample_image_file))
-        new_sample_image = transform.resize(new_sample_image, X_test_raw[0].shape)
+        new_sample_image = transform.resize(new_sample_image, X_test_raw[0].shape, mode="reflect")
         # plt.imshow(new_sample_image)
         # plt.show()
         new_X_test_raw.append(new_sample_image)
