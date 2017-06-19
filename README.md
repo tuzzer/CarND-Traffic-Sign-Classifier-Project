@@ -1,54 +1,211 @@
-## Project: Build a Traffic Sign Recognition Program
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-
-Overview
+**Traffic Sign Recognition** 
 ---
-In this project, you will use what you've learned about deep neural networks and convolutional neural networks to classify traffic signs. You will train and validate a model so it can classify traffic sign images using the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset). After the model is trained, you will then try out your model on images of German traffic signs that you find on the web.
 
-We have included an Ipython notebook that contains further instructions 
-and starter code. Be sure to download the [Ipython notebook](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb). 
 
-We also want you to create a detailed writeup of the project. Check out the [writeup template](https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup. The writeup can be either a markdown file or a pdf document.
+[//]: # (Image References)
 
-To meet specifications, the project will require submitting three files: 
-* the Ipython notebook with the code
-* the code exported as an html file
-* a writeup report either as a markdown or pdf file 
+[exploration]: ./write-up_images/exploration.png "exploration"
+[noisy_image]: ./write-up_images/noisy_image.png "noisy_image"
+[random_test_image_1]: ./write-up_images/random_test_image_1.png "random_test_image_1"
+[random_test_image_2]: ./write-up_images/random_test_image_2.png "random_test_image_2"
+[random_test_image_3]: ./write-up_images/random_test_image_3.png "random_test_image_3"
+[new_image_1]: ./write-up_images/new_image_1.png "new_image_1"
+[new_image_2]: ./write-up_images/new_image_2.png "new_image_2"
+[new_image_3]: ./write-up_images/new_image_3.png "new_image_3"
+[new_image_4]: ./write-up_images/new_image_4.png "new_image_4"
+[new_image_5]: ./write-up_images/write-up_images/new_image_5.png "new_image_5"
+[new_image_6]: ./write-up_images/new_image_6.png "new_image_6"
+[new_image_1_train]: ./write-up_images/new_image_1_train.png "new_image_1_train"
+[new_image_2_train]: ./write-up_images/new_image_2_train.png "new_image_2_train"
+[new_image_3_train]: ./write-up_images/new_image_3_train.png "new_image_3_train"
+[new_image_4_train]: ./write-up_images/new_image_4_train.png "new_image_4_train"
+[new_image_5_train]: ./write-up_images/new_image_5_train.png "new_image_5_train"
+[new_image_6_train]: ./write-up_images/new_image_6_train.png "new_image_6_train"
+[bicycle_train]: ./write-up_images/bicycle_train.png "bicycle_train"
 
-Creating a Great Writeup
----
-A great writeup should include the [rubric points](https://review.udacity.com/#!/rubrics/481/view) as well as your description of how you addressed each point.  You should include a detailed description of the code used in each step (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
+Here is a link to my [project code](https://github.com/tuzzer/CarND-Traffic-Sign-Classifier-Project/blob/master/Traffic_Sign_Classifier.ipynb).
 
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
 
-The Project
----
-The goals / steps of this project are the following:
-* Load the data set
-* Explore, summarize and visualize the data set
-* Design, train and test a model architecture
-* Use the model to make predictions on new images
-* Analyze the softmax probabilities of the new images
-* Summarize the results with a written report
+###Data Set Summary & Exploration
 
-### Dependencies
-This lab requires:
+![alt text][exploration]
 
-* [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit)
+I plotted the number of samples in each class in the training set in descending order.
 
-The lab environment can be created with CarND Term1 Starter Kit. Click [here](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) for the details.
+The number of samples among the different classes is very unbalanced.
+This can cause overfitting with the over-represented class and it might not be able to predict under-represented classes well. 
 
-### Dataset and Repository
+To alleviate this problem, I oversampled the under-represented classes with added noise.
 
-1. Download the data set. The classroom has a link to the data set in the "Project Instructions" content. This is a pickled dataset in which we've already resized the images to 32x32. It contains a training, validation and test set.
-2. Clone the project, which contains the Ipython notebook and the writeup template.
-```sh
-git clone https://github.com/udacity/CarND-Traffic-Sign-Classifier-Project
-cd CarND-Traffic-Sign-Classifier-Project
-jupyter notebook Traffic_Sign_Classifier.ipynb
-```
+###Design and Test a Model Architecture
 
-### Requirements for Submission
-Follow the instructions in the `Traffic_Sign_Classifier.ipynb` notebook and write the project report using the writeup template as a guide, `writeup_template.md`. Submit the project code and writeup document.
+####1. Pre-process the Data Set
+
+Here I oversampled the training samples to make all classes so that each class has the sample number of samples. 
+
+I added "salt and pepper" noise to the additional samples to reduce over-fitting. Note that noisy images are added to the classes with most samples as well.
+![alt text][noisy_image]
+
+In addition, I greyscaled the images to reduce the number of features. This allows the use of neural network with fewer parameters and requires fewer training samples
+
+After pre-processing, the number of training samples became 103716, 
+and the number of color channel became 1.
+
+
+####2. Model Architecture
+
+I modified the LeNet used in the MNIST example. 
+The main change I made was to increase the depth of the first two convolutional layers to 32 and 64
+respectively to account for the added complexity of the data. 
+I also increased the number of epochs to 150 since there are more training samples and neurons (when compared to MNIST).
+Moreover, I added a dropout layer to reduce over-fitting.
+
+My final model consisted of the following layers:
+
+| Layer         		|     Description	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| Input         		| 32x32x1 Greyscale image   					|
+| Convolution 3x3     	| 1x1 stride, valid padding, depth 32 	        |
+| RELU					|												|
+| Max pooling	      	| 2x2 stride				                    |
+| Convolution 5x5	    | 1x1 stride, valid padding, depth 64     		|
+| RELU					|												|
+| Max pooling	      	| 2x2 stride 				                    |
+| Fully connected		| output 120        						    |	
+| RELU					|												|
+| Fully connected		| output 84        						        |	
+| RELU					|												|
+| Dropout               |                                               |
+| Fully connected		| output 43        						        |	
+
+
+####3. Train, Validate and Test the Model
+
+A validation set can be used to assess how well the model is performing. 
+A low accuracy on the training and validation sets imply underfitting. 
+A high accuracy on the training set but low accuracy on the validation set implies overfitting.
+
+
+After training for 150 epochs, the accuracy on the validation set was approximately 0.962 and the accuracy on the test set was approximately 0.943. 
+The model slightly over-fitted but the difference is relatively small.
+
+#####Prediction on randomly selected test images
+
+######Image # 0
+
+![alt text][random_test_image_1]
+
+Prediction = Speed limit (80km/h)
+
+
+######Image # 1
+
+![alt text][random_test_image_2]
+
+Prediction = General caution
+
+######Image # 2
+
+![alt text][random_test_image_3]
+
+Prediction = Speed limit (50km/h)
+
+
+###Test a Model on New Images
+
+Here are six German traffic signs that I found on the web:
+
+![alt text][new_image_1] ![alt text][new_image_2] 
+![alt text][new_image_3] ![alt text][new_image_4] 
+![alt text][new_image_5] ![alt text][new_image_6]
+
+
+Here are the results of the prediction:
+
+| Image			        |     Prediction	        					| 
+|:---------------------:|:---------------------------------------------:| 
+| Bicycle Crossing		| Ahead only    								| 
+| Wild animals crossing | Wild animals crossing 						|
+| Go straight or right 	| Go straight or right          				|
+| Pedestrians      		| Pedestrians					 				|
+| Road work 			| Road work           							|
+| Stop         			| Stop                 							|
+
+
+Out of the 6 new images that I found on the web, I got 5 of them right. 
+
+This gives the model an accuracy of 0.83 for new images. This is low compared to the accuracy on the test set. 
+
+
+####3. Prediction Confidence
+
+The one that my model got wrong is "Bicycle Crossing". The confidence on the incorrectly classified images are relatively low. 
+Samples in the test set might be relative similar which caused the overfitting.
+
+######Bicycle Crossing in training sample
+
+The images below showed an example of the this class in our training set.
+
+![alt text][bicycle_train]
+
+Due to small size and fine details in the images, a 32x32 sample is very pixelated and it is even difficult for human being to tell what the signs are.
+This might have contributed to the incorrect predictions. 
+
+
+#####Bicycle Crossing		
+        			
+Top 5 Predictions
+	 Ahead only -- 1.14582
+	 Bicycles crossing -- -0.354429
+	 Children crossing -- -4.57259
+	 Slippery road -- -6.26757
+	 Speed limit (60km/h) -- -6.53344
+
+#####Wild animals crossing 
+
+Top 5 Predictions
+	 Wild animals crossing -- 5.51297
+	 Slippery road -- -0.466942
+	 No passing for vehicles over 3.5 metric tons -- -9.11336
+	 Dangerous curve to the left -- -12.5807
+	 Road work -- -15.5678
+ 
+
+#####Go straight or right 	
+
+Top 5 Predictions
+	 Go straight or right -- 17.6862
+	 Dangerous curve to the left -- -18.5981
+	 Road work -- -18.6661
+	 General caution -- -22.9936
+	 Bicycles crossing -- -23.2801
+
+ 
+#####Pedestrians      		
+
+Top 5 Predictions
+	 Pedestrians -- 26.7529
+	 Right-of-way at the next intersection -- 15.7218
+	 General caution -- -8.36611
+	 Roundabout mandatory -- -21.1614
+	 Vehicles over 3.5 metric tons prohibited -- -25.2543
+	 
+#####Road work
+
+Top 5 Predictions 
+	 Road work -- 15.2368
+	 Dangerous curve to the right -- -8.52853
+	 Beware of ice/snow -- -19.1516
+	 No passing for vehicles over 3.5 metric tons -- -28.595
+	 Wild animals crossing -- -30.0119
+
+#####Stop
+
+Top 5 Predictions
+	 Stop -- 2.01156
+	 Speed limit (30km/h) -- -4.08149
+	 Speed limit (70km/h) -- -4.47525
+	 Turn right ahead -- -4.87525
+	 Roundabout mandatory -- -6.19679
+
